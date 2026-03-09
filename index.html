@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FUSION Study Academy ✦ admin + chat</title>
+    <!-- Font Awesome 6 (free) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Font: Inter + fallback -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <style>
+        /* ---- base styles (identical to previous, plus admin panel styles) ---- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: radial-gradient(circle at 10% 30%, #ffe5b4, #ffb6c1, #a1c4fd, #c2e9fb);
+            background-blend-mode: soft-light;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            margin: 0;
+            position: relative;
+            animation: bgPulse 12s infinite alternate ease-in-out;
+        }
+
+        @keyframes bgPulse {
+            0% { background: radial-gradient(circle at 10% 30%, #ffdba6, #faa0b5, #90c0f0, #b0dcf5); }
+            50% { background: radial-gradient(circle at 90% 70%, #fbc2c2, #b7daf9, #fde6b3, #c7b9ff); }
+            100% { background: radial-gradient(circle at 30% 60%, #c9b1ff, #ffc3a0, #a0e7e5, #fde2b1); }
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            top: -50px;
+            right: -50px;
+            background: rgba(255, 215, 100, 0.25);
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            bottom: -100px;
+            left: -100px;
+            background: rgba(170, 210, 255, 0.35);
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .card {
+            max-width: 1000px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(14px) saturate(180%);
+            -webkit-backdrop-filter: blur(14px) saturate(180%);
+            border-radius: 48px 48px 48px 48px;
+            box-shadow: 0 30px 70px rgba(0, 30, 60, 0.35), 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 2px 4px rgba(255,255,255,0.6);
+            padding: 40px 35px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            position: relative;
+            z-index: 10;
+            transition: 0.25s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 40px 80px rgba(0, 60, 120, 0.4);
+        }
+
+        /* ----- admin toggle / panel in top right corner ----- */
+        .admin-corner {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .admin-toggle {
+            background: #1f2b48;
+            color: white;
+            border: 3px solid #ffcf8c;
+            border-radius: 60px;
+            padding: 12px 22px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #0e162b, 0 12px 25px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: 0.1s;
+            backdrop-filter: blur(4px);
+        }
+
+        .admin-toggle i {
+            color: #fedb9f;
+            font-size: 1.5rem;
+        }
+
+        .admin-toggle:hover {
+            background: #2d3d66;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 0 #0e162b, 0 15px 30px #0000004d;
+        }
+
+        /* admin login panel (dropdown style) */
+        .admin-login-panel {
+            background: rgba(30, 30, 50, 0.95);
+            backdrop-filter: blur(16px);
+            border: 3px solid #fdbe7e;
+            border-radius: 40px;
+            padding: 25px 30px;
+            width: 300px;
+            margin-top: 15px;
+            box-shadow: 0 30px 40px #2a1f3a;
+            display: none;
+            color: white;
+        }
+
+        .admin-login-panel.show {
+            display: block;
+        }
+
+        .admin-login-panel h3 {
+            font-size: 1.8rem;
+            color: #ffdcaa;
+            margin-bottom: 15px;
+            border-left: 7px solid #f77b7b;
+            padding-left: 12px;
+        }
+
+        .admin-login-panel input {
+            width: 100%;
+            padding: 14px 18px;
+            margin: 10px 0;
+            border-radius: 60px;
+            border: none;
+            background: #efeef5;
+            font-weight: 600;
+            font-size: 1rem;
+            border: 2px solid transparent;
+        }
+        .admin-login-panel input:focus {
+            border: 2px solid #ff9e5e;
+            outline: none;
+        }
+
+        .admin-login-panel button {
+            background: linear-gradient(145deg, #ffb347, #ff8c5a);
+            border: none;
+            color: #1d2d44;
+            font-weight: 800;
+            padding: 14px 20px;
+            border-radius: 60px;
+            width: 100%;
+            font-size: 1.3rem;
+            border: 3px solid white;
+            box-shadow: 0 6px 0 #b14f3b;
+            cursor: pointer;
+            transition: 0.1s;
+            margin-top: 10px;
+        }
+        .admin-login-panel button:hover {
+            background: #ffa53e;
+            transform: scale(1.01);
+        }
+
+        .login-error {
+            color: #ff9494;
+            font-size: 0.9rem;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
+        /* admin editor panel – replaces login after success */
+        .admin-editor {
+            background: rgba(35, 35, 55, 0.98);
+            backdrop-filter: blur(20px);
+            border: 3px solid #a5f0d1;
+            border-radius: 50px;
+            padding: 25px 28px;
+            width: 340px;
+            margin-top: 15px;
+            color: white;
+            box-shadow: 0 30px 50px #241c36;
+            display: none;
+        }
+        .admin-editor.show {
+            display: block;
+        }
+        .admin-editor h3 {
+            color: #c3ffb2;
+            font-size: 1.8rem;
+            margin-bottom: 18px;
+        }
+        .admin-editor label {
+            font-weight: 600;
+            margin-top: 12px;
+            display: block;
+            color: #ffe3b5;
+        }
+        .admin-editor input, .admin-editor textarea {
+            width: 100%;
+            padding: 12px 16px;
+            margin: 5px 0 10px;
+            border-radius: 30px;
+            border: 2px solid #c9b1ff;
+            background: #fcf9f2;
+            font-weight: 500;
+        }
+        .admin-editor .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .admin-editor button {
+            background: #00b894;
+            border: none;
+            color: white;
+            font-weight: 800;
+            padding: 12px 20px;
+            border-radius: 50px;
+            flex: 1;
+            font-size: 1.1rem;
+            border: 3px solid white;
+            box-shadow: 0 5px 0 #006b51;
+            cursor: pointer;
+        }
+        .admin-editor button.logout-btn {
+            background: #d55c5c;
+            box-shadow: 0 5px 0 #883f3f;
+        }
+        .admin-editor button:hover { filter: brightness(1.05); transform: scale(1.01); }
+
+        /* ---- rest of the original design (minor adapt for absolute admin) ---- */
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(145deg, #0b2d5a, #2f5a9c, #b13e7c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.2em;
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            text-shadow: 4px 4px 12px rgba(255,255,200,0.3);
+            padding-right: 120px; /* avoid overlap with admin corner */
+        }
+
+        h1 i {
+            background: white;
+            padding: 10px;
+            border-radius: 60px;
+            color: #d44c7a;
+            box-shadow: 0 10px 18px #f0c0d0;
+        }
+
+        .subhead {
+            background: linear-gradient(90deg, #ffecbc, #f9dde4);
+            padding: 14px 22px;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #122c47;
+            display: inline-block;
+            margin-bottom: 30px;
+            border: 2px solid white;
+            box-shadow: 0 8px 0 #a06b9e;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 35px 0;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(4px);
+            border-radius: 32px;
+            padding: 22px 18px;
+            box-shadow: 0 20px 30px -8px rgba(70, 40, 100, 0.25);
+            border: 2px solid rgba(255,255,240,0.9);
+            transition: 0.15s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(125deg, rgba(255,220,150,0.3), rgba(190,210,255,0.3));
+            z-index: -1;
+        }
+
+        .section:hover {
+            transform: translateY(-6px);
+            border-color: #ffbe5c;
+            box-shadow: 0 30px 40px -10px #c06b9e;
+        }
+
+        .section h2 {
+            font-size: 1.7rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #162b4e, #2d5082);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 15px;
+            border-left: 8px solid #f97373;
+            padding-left: 15px;
+        }
+
+        .faculty-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 15px 0;
+        }
+
+        .faculty-tag {
+            background: linear-gradient(115deg, #fdeab9, #fdcedf);
+            color: #1f3d66;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 2px solid white;
+            box-shadow: 0 4px 0 #b48bbd;
+        }
+
+        .faculty-tag i {
+            color: #bc4e9c;
+            font-size: 1.2rem;
+        }
+
+        .details p {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(245, 240, 255, 0.7);
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-weight: 500;
+            color: #1a2b3c;
+        }
+
+        .details i {
+            width: 26px;
+            color: #c2496b;
+            font-size: 1.3rem;
+        }
+
+        .fee {
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1d6f42, #38b487);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline-block;
+            padding: 5px 22px;
+            border-radius: 60px;
+            border: 3px solid #9cd4b2;
+            margin-top: 16px;
+            background-color: #efffef;
+        }
+
+        .offer {
+            background: linear-gradient(115deg, #fee69c, #fed0b5, #ffb3aa);
+            border-radius: 40px;
+            padding: 18px 28px;
+            margin: 20px 0;
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: #2b1f35;
+            border: 3px solid white;
+            box-shadow: 0 8px 0 #c46b4a, 0 10px 20px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .offer i {
+            font-size: 2.6rem;
+            color: #c5471f;
+            filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.2));
+        }
+
+        .contact-info {
+            background: rgba(255,255,255,0.8);
+            border-radius: 80px;
+            padding: 22px 30px;
+            margin: 35px 0 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 35px;
+            border: 3px solid #fce1b1;
+            box-shadow: 0 12px 0 #b77b9e, 0 20px 30px #d9b1c5;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #10345e;
+            background: #fff2d7;
+            padding: 8px 22px;
+            border-radius: 60px;
+            border: 2px solid white;
+            transition: 0.1s;
+        }
+
+        .contact-item a {
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .contact-item i {
+            font-size: 2rem;
+        }
+
+        .contact-item .fa-whatsapp {
+            color: #25D366;
+            filter: drop-shadow(0 4px 2px rgba(0,130,0,0.2));
+        }
+
+        .contact-item:hover {
+            background: #ffcf8c;
+            transform: scale(1.02);
+        }
+
+        .location {
+            background: #dbeaf9;
+            border-radius: 60px;
+            padding: 18px 28px;
+            border: 3px dashed #f37b7b;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #062038;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            box-shadow: inset 0 -3px 0 #abbecf;
+        }
+
+        .location i {
+            font-size: 2rem;
+            color: #e34141;
+        }
+
+        .whatsapp-float {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #25D366;
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            box-shadow: 0 12px 25px rgba(0, 130, 50, 0.5), 0 0 0 8px rgba(255,255,255,0.4);
+            transition: 0.2s;
+            z-index: 999;
+            border: 4px solid white;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
+        .whatsapp-float:hover {
+            background: #20b859;
+            transform: scale(1.15) rotate(5deg);
+            box-shadow: 0 16px 30px #1b8f41;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: #fff9e6;
+            padding: 16px;
+            border-radius: 120px;
+            color: #562b7c;
+            border: 3px solid white;
+            box-shadow: 0 6px 0 #d49fc7;
+        }
+
+        .footer i {
+            color: #e64c4c;
+            margin: 0 4px;
+        }
+
+        .hot-badge {
+            background: #ff6f61;
+            color: white;
+            font-size: 0.8rem;
+            padding: 4px 12px;
+            border-radius: 40px;
+            margin-left: 10px;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2.2rem; padding-right: 20px; }
+            .card { padding: 25px 18px; }
+            .whatsapp-float { width: 60px; height: 60px; font-size: 2.5rem; bottom: 20px; right: 20px; }
+            .admin-corner { top: 10px; right: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <!-- ADMIN CORNER: toggle + login / editor panel -->
+        <div class="admin-corner">
+            <div class="admin-toggle" id="adminToggle">
+                <i class="fas fa-lock"></i> Admin
+                <i class="fas fa-caret-down"></i>
+            </div>
+            <!-- login panel (hidden by default) -->
+            <div class="admin-login-panel" id="loginPanel">
+                <h3><i class="fas fa-user-shield"></i> Admin login</h3>
+                <input type="text" id="adminUser" placeholder="username" value="admin">
+                <input type="password" id="adminPass" placeholder="password" value="fusion2026">
+                <button id="loginBtn"><i class="fas fa-sign-in-alt"></i> Enter</button>
+                <div class="login-error" id="loginError"></div>
+            </div>
+            <!-- editor panel (hidden by default) -->
+            <div class="admin-editor" id="editorPanel">
+                <h3><i class="fas fa-edit"></i> edit details</h3>
+                <label>Science VI-VIII fee</label>
+                <input type="text" id="feeSci8" value="₹1000/month">
+                <label>Arts VI-VIII fee</label>
+                <input type="text" id="feeArt8" value="₹1000/month">
+                <label>Science IX-X fee</label>
+                <input type="text" id="feeSci10" value="₹1200/month">
+                <label>Arts IX-X fee</label>
+                <input type="text" id="feeArt10" value="₹1300/month">
+                <label>Combo VI-VIII</label>
+                <input type="text" id="combo1" value="₹1700/month">
+                <label>Combo IX-X</label>
+                <input type="text" id="combo2" value="₹2000/month">
+                <label>faculty (comma split)</label>
+                <input type="text" id="facultyInput" value="Rana Bhattacharjee, Joydeep Datta, Pritam Chakraborty">
+                <label>location</label>
+                <input type="text" id="locationInput" value="A.D. Nagar, Near Unnayan Sangha Club · Agartala – 799003">
+                <div class="button-group">
+                    <button id="saveChangesBtn"><i class="fas fa-save"></i> save</button>
+                    <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> logout</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- original content with dynamic spans/ids for editing -->
+        <h1>
+            <i class="fas fa-bolt"></i> FUSION STUDY ACADEMY
+            <span class="hot-badge">✦ 2026-27 ✦</span>
+        </h1>
+        <div class="subhead">
+            <i class="far fa-calendar-alt"></i> Where mind fuse with knowledge 
+            <i class="fas fa-dragon" style="margin-left: 8px;"></i>
+        </div>
+
+        <!-- Faculty section (dynamic) -->
+        <div class="section">
+            <h2><i class="fas fa-chalkboard-teacher"></i> OUR FACULTY <i class="fas fa-star" style="color: gold;"></i></h2>
+            <div class="faculty-list" id="facultyContainer">
+                <!-- filled from js -->
+            </div>
+            <div style="margin-top: 12px; font-style: italic; color: #ac4b6b;"><i class="fas fa-heart"></i> 5+ years experience</div>
+        </div>
+
+        <!-- groups grid with dynamic fee spans -->
+        <div class="grid">
+            <div class="section">
+                <h2><i class="fas fa-flask"></i> Science VI–VIII</h2>
+                <div class="details"><p><i class="fas fa-atom"></i> Phy · Chem · Bio · Maths</p><p><i class="fas fa-chalkboard"></i> Rana Bhattacharjee</p></div>
+                <div class="fee" id="feeDisplay1"><i class="fas fa-tag"></i> ₹1000/month</div>
+            </div>
+            <div class="section">
+                <h2><i class="fas fa-palette"></i> Arts VI–VIII</h2>
+                <div class="details"><p><i class="fas fa-book"></i> Bengali · English · SST</p><p><i class="fas fa-users"></i> Joydeep · Pritam</p><p><i class="fas fa-language"></i> Hindi/Sanskrit (Opt.)</p></div>
+                <div class="fee" id="feeDisplay2"><i class="fas fa-tag"></i> ₹1000/month</div>
+            </div>
+            <div class="section">
+                <h2><i class="fas fa-flask"></i> Science IX–X</h2>
+                <div class="details"><p><i class="fas fa-dna"></i> Phy · Chem · Bio · Maths</p><p><i class="fas fa-chalkboard"></i> Rana Bhattacharjee</p></div>
+                <div class="fee" id="feeDisplay3"><i class="fas fa-tag"></i> ₹1200/month</div>
+            </div>
+            <div class="section">
+                <h2><i class="fas fa-palette"></i> Arts IX–X</h2>
+                <div class="details"><p><i class="fas fa-scroll"></i> Bengali · English · SST</p><p><i class="fas fa-users"></i> Joydeep · Pritam</p></div>
+                <div class="fee" id="feeDisplay4"><i class="fas fa-tag"></i> ₹1300/month</div>
+            </div>
+        </div>
+
+        <!-- combo offers with dynamic spans -->
+        <div class="offer" id="comboDisplay1">
+            <i class="fas fa-crown"></i>
+            <span><strong>VI–VIII COMBO</strong> (Science + Arts) <span style="background:#b83154; color:white; padding:5px 15px; border-radius:60px;" id="comboSpan1">₹1700/month</span></span>
+        </div>
+        <div class="offer" id="comboDisplay2">
+            <i class="fas fa-gem"></i>
+            <span><strong>IX–X COMBO</strong> (Science + Arts) <span style="background:#b8315b; color:white; padding:5px 15px; border-radius:60px;" id="comboSpan2">₹2000/month</span></span>
+        </div>
+
+        <!-- CONTACT with whatsapp links -->
+        <div class="contact-info">
+            <div class="contact-item"><a href="https://wa.me/919862715145?text=Hello%20FUSION%20Study%20Academy!%20I'm%20interested%20in%20classes%20(2026-27)" target="_blank"><i class="fab fa-whatsapp"></i> +91 9862715145</a></div>
+            <div class="contact-item"><a href="https://wa.me/916009898931?text=Hi%20FUSION%20Academy!%20I%20need%20info%20about%20batches" target="_blank"><i class="fab fa-whatsapp"></i> +91 6009898931</a></div>
+        </div>
+
+        <!-- Location dynamic -->
+        <div class="location" id="locationDisplay">
+            <i class="fas fa-map-pin"></i> A.D. Nagar, Near Unnayan Sangha Club · Agartala – 799003
+            <a href="#" style="color:#1e4f7a; margin-left: 8px;"><i class="fas fa-directions"></i></a>
+        </div>
+
+        <div class="footer">
+            <i class="fas fa-heart" style="color: #f23b3b;"></i>  Thank You  <i class="fas fa-heart" style="color: #f23b3b;"></i>  |  visit again ✨
+        </div>
+    </div>
+
+    <!-- floating WhatsApp chat link -->
+    <a href="https://wa.me/919862715145?text=Hello%20FUSION%20Academy!%20Interested%20in%20your%20courses%202026-27" class="whatsapp-float" target="_blank" title="Chat with us on WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <script>
+        (function() {
+            // ----- admin state & UI elements -----
+            const adminToggle = document.getElementById('adminToggle');
+            const loginPanel = document.getElementById('loginPanel');
+            const editorPanel = document.getElementById('editorPanel');
+            const loginBtn = document.getElementById('loginBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const saveBtn = document.getElementById('saveChangesBtn');
+            const loginError = document.getElementById('loginError');
+
+            // hardcoded credentials (you may change)
+            const VALID_USER = 'admin';
+            const VALID_PASS = 'fusion2026';
+
+            // display fields
+            const feeDisplay1 = document.getElementById('feeDisplay1');
+            const feeDisplay2 = document.getElementById('feeDisplay2');
+            const feeDisplay3 = document.getElementById('feeDisplay3');
+            const feeDisplay4 = document.getElementById('feeDisplay4');
+            const comboSpan1 = document.getElementById('comboSpan1');
+            const comboSpan2 = document.getElementById('comboSpan2');
+            const locationDisplay = document.getElementById('locationDisplay');
+            const facultyContainer = document.getElementById('facultyContainer');
+
+            // editor inputs
+            const feeSci8 = document.getElementById('feeSci8');
+            const feeArt8 = document.getElementById('feeArt8');
+            const feeSci10 = document.getElementById('feeSci10');
+            const feeArt10 = document.getElementById('feeArt10');
+            const combo1 = document.getElementById('combo1');
+            const combo2 = document.getElementById('combo2');
+            const facultyInput = document.getElementById('facultyInput');
+            const locationInput = document.getElementById('locationInput');
+
+            // initial load: fill faculty from default
+            function renderFaculty(tags) {
+                let names = tags.split(',').map(s => s.trim());
+                facultyContainer.innerHTML = '';
+                names.forEach(name => {
+                    if (!name) return;
+                    const span = document.createElement('span');
+                    span.className = 'faculty-tag';
+                    span.innerHTML = `<i class="fas fa-user-graduate"></i> ${name}`;
+                    facultyContainer.appendChild(span);
+                });
+            }
+
+            // set initial values (sync from display)
+            function syncEditorFromDisplay() {
+                feeSci8.value = feeDisplay1.innerText.replace('₹', '₹').trim();
+                feeArt8.value = feeDisplay2.innerText.replace('₹', '₹').trim();
+                feeSci10.value = feeDisplay3.innerText.replace('₹', '₹').trim();
+                feeArt10.value = feeDisplay4.innerText.replace('₹', '₹').trim();
+                combo1.value = comboSpan1.innerText.trim();
+                combo2.value = comboSpan2.innerText.trim();
+                // gather faculty tags as string
+                let facultyNames = [];
+                document.querySelectorAll('.faculty-tag').forEach(tag => {
+                    let text = tag.innerText.trim();
+                    facultyNames.push(text);
+                });
+                facultyInput.value = facultyNames.join(', ');
+                locationInput.value = locationDisplay.innerText.replace('directions', '').replace('⋁', '').trim(); // rough
+            }
+
+            // update main page from editor values
+            function updatePageFromEditor() {
+                feeDisplay1.innerHTML = '<i class="fas fa-tag"></i> ' + feeSci8.value;
+                feeDisplay2.innerHTML = '<i class="fas fa-tag"></i> ' + feeArt8.value;
+                feeDisplay3.innerHTML = '<i class="fas fa-tag"></i> ' + feeSci10.value;
+                feeDisplay4.innerHTML = '<i class="fas fa-tag"></i> ' + feeArt10.value;
+                comboSpan1.innerText = combo1.value;
+                comboSpan2.innerText = combo2.value;
+                locationDisplay.innerHTML = '<i class="fas fa-map-pin"></i> ' + locationInput.value + ' <a href="#" style="color:#1e4f7a; margin-left: 8px;"><i class="fas fa-directions"></i></a>';
+                renderFaculty(facultyInput.value);
+            }
+
+            // show/hide panels
+            function showLogin(show) {
+                if (show) {
+                    loginPanel.classList.add('show');
+                    editorPanel.classList.remove('show');
+                } else {
+                    loginPanel.classList.remove('show');
+                }
+            }
+            function showEditor(show) {
+                if (show) {
+                    editorPanel.classList.add('show');
+                    loginPanel.classList.remove('show');
+                } else {
+                    editorPanel.classList.remove('show');
+                }
+            }
+
+            // toggle admin panel visibility (click admin button)
+            let adminVisible = false; // tracks if login/editor is visible
+            adminToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!adminVisible) {
+                    // if logged in ? show editor : show login
+                    if (editorPanel.classList.contains('show') || sessionStorage.getItem('fusionAdmin') === 'logged') {
+                        // already editor visible? or stored flag
+                        if (!editorPanel.classList.contains('show')) {
+                            showEditor(true);
+                            syncEditorFromDisplay();
+                        } else {
+                            // if editor visible, keep but sync
+                            syncEditorFromDisplay();
+                        }
+                    } else {
+                        showLogin(true);
+                    }
+                    adminVisible = true;
+                } else {
+                    // hide whatever is visible
+                    loginPanel.classList.remove('show');
+                    editorPanel.classList.remove('show');
+                    adminVisible = false;
+                }
+            });
+
+            // login handler
+            loginBtn.addEventListener('click', () => {
+                const user = document.getElementById('adminUser').value;
+                const pass = document.getElementById('adminPass').value;
+                if (user === VALID_USER && pass === VALID_PASS) {
+                    loginError.innerText = '';
+                    showLogin(false);
+                    showEditor(true);
+                    sessionStorage.setItem('fusionAdmin', 'logged');
+                    syncEditorFromDisplay();
+                } else {
+                    loginError.innerText = '❌ Invalid credentials (admin / fusion2026)';
+                }
+            });
+
+            // logout
+            logoutBtn.addEventListener('click', () => {
+                showEditor(false);
+                loginPanel.classList.remove('show');
+                adminVisible = false;
+                sessionStorage.removeItem('fusionAdmin');
+            });
+
+            // save changes
+            saveBtn.addEventListener('click', () => {
+                updatePageFromEditor();
+                // optionally keep editor open
+            });
+
+            // check if already logged via session (simple persistence)
+            if (sessionStorage.getItem('fusionAdmin') === 'logged') {
+                // don't show panel automatically, but editor ready
+                // just set flag
+            }
+
+            // init faculty
+            renderFaculty('Rana Bhattacharjee, Joydeep Datta, Pritam Chakraborty');
+        })();
+    </script>
+    <!-- simple instruction: save as .html and open in browser -->
+</body>
+</html>
