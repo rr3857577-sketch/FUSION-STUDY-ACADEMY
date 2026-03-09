@@ -563,12 +563,12 @@
                 <i class="fas fa-lock"></i> Admin
                 <i class="fas fa-caret-down"></i>
             </div>
-            <!-- login panel (hidden by default) -->
+            <!-- login panel (hidden by default) - EMPTY FIELDS NOW -->
             <div class="admin-login-panel" id="loginPanel">
                 <h3><i class="fas fa-user-shield"></i> Admin login</h3>
-                <input type="text" id="adminUser" placeholder="username" value="admin">
-                <input type="password" id="adminPass" placeholder="password" value="fusion2026">
-                <button id="loginBtn"><i class="fas fa-sign-in-alt"></i> Enter</button>
+                <input type="text" id="adminUser" placeholder="Enter username" value="">
+                <input type="password" id="adminPass" placeholder="Enter password" value="">
+                <button id="loginBtn"><i class="fas fa-sign-in-alt"></i> Login</button>
                 <div class="login-error" id="loginError"></div>
             </div>
             <!-- editor panel (hidden by default) -->
@@ -683,7 +683,7 @@
             const saveBtn = document.getElementById('saveChangesBtn');
             const loginError = document.getElementById('loginError');
 
-            // hardcoded credentials (you may change)
+            // hardcoded credentials (you can change these)
             const VALID_USER = 'admin';
             const VALID_PASS = 'fusion2026';
 
@@ -735,7 +735,7 @@
                     facultyNames.push(text);
                 });
                 facultyInput.value = facultyNames.join(', ');
-                locationInput.value = locationDisplay.innerText.replace('directions', '').replace('⋁', '').trim(); // rough
+                locationInput.value = locationDisplay.innerText.replace('directions', '').replace('⋁', '').trim();
             }
 
             // update main page from editor values
@@ -755,10 +755,15 @@
                 if (show) {
                     loginPanel.classList.add('show');
                     editorPanel.classList.remove('show');
+                    // Clear any previous input values for security
+                    document.getElementById('adminUser').value = '';
+                    document.getElementById('adminPass').value = '';
+                    loginError.innerText = '';
                 } else {
                     loginPanel.classList.remove('show');
                 }
             }
+            
             function showEditor(show) {
                 if (show) {
                     editorPanel.classList.add('show');
@@ -769,23 +774,12 @@
             }
 
             // toggle admin panel visibility (click admin button)
-            let adminVisible = false; // tracks if login/editor is visible
+            let adminVisible = false;
             adminToggle.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (!adminVisible) {
-                    // if logged in ? show editor : show login
-                    if (editorPanel.classList.contains('show') || sessionStorage.getItem('fusionAdmin') === 'logged') {
-                        // already editor visible? or stored flag
-                        if (!editorPanel.classList.contains('show')) {
-                            showEditor(true);
-                            syncEditorFromDisplay();
-                        } else {
-                            // if editor visible, keep but sync
-                            syncEditorFromDisplay();
-                        }
-                    } else {
-                        showLogin(true);
-                    }
+                    // Always show login panel first (never auto-show editor)
+                    showLogin(true);
                     adminVisible = true;
                 } else {
                     // hide whatever is visible
@@ -795,18 +789,20 @@
                 }
             });
 
-            // login handler
+            // login handler - NOW REQUIRES MANUAL ENTRY
             loginBtn.addEventListener('click', () => {
                 const user = document.getElementById('adminUser').value;
                 const pass = document.getElementById('adminPass').value;
+                
                 if (user === VALID_USER && pass === VALID_PASS) {
                     loginError.innerText = '';
                     showLogin(false);
                     showEditor(true);
-                    sessionStorage.setItem('fusionAdmin', 'logged');
                     syncEditorFromDisplay();
                 } else {
-                    loginError.innerText = '❌ Invalid credentials (admin / fusion2026)';
+                    loginError.innerText = '❌ Invalid username or password';
+                    // Clear password field for security
+                    document.getElementById('adminPass').value = '';
                 }
             });
 
@@ -815,25 +811,18 @@
                 showEditor(false);
                 loginPanel.classList.remove('show');
                 adminVisible = false;
-                sessionStorage.removeItem('fusionAdmin');
             });
 
             // save changes
             saveBtn.addEventListener('click', () => {
                 updatePageFromEditor();
-                // optionally keep editor open
+                // Show a quick success message (optional)
+                alert('Changes saved successfully!');
             });
 
-            // check if already logged via session (simple persistence)
-            if (sessionStorage.getItem('fusionAdmin') === 'logged') {
-                // don't show panel automatically, but editor ready
-                // just set flag
-            }
-
-            // init faculty
+            // Initialize faculty
             renderFaculty('Rana Bhattacharjee, Joydeep Datta, Pritam Chakraborty');
         })();
     </script>
-    <!-- simple instruction: save as .html and open in browser -->
 </body>
 </html>
